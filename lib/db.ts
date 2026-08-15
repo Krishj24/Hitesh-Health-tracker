@@ -1,19 +1,33 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-const url =
-  process.env.DATABASE_URL ||
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+/**
+ * Resolved lazily, not at import time. Next.js loads route modules while
+ * collecting page data at build time -- if this threw at the top level, a
+ * missing DATABASE_URL would fail the whole build, before Vercel ever gets
+ * to a request where the env var is actually available.
+ */
+function client(): NeonQueryFunction<false, false> {
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_URL_NON_POOLING;
 
-if (!url) {
-  throw new Error(
-    "No database connection string. In Vercel: Storage -> create a Neon Postgres " +
-      "database and connect it to this project (DATABASE_URL is injected for you). " +
-      "Locally: put DATABASE_URL=... in .env.local",
-  );
+  if (!url) {
+    throw new Error(
+      "No database connection string. In Vercel: Storage -> create a Neon Postgres " +
+        "database and connect it to this project (DATABASE_URL is injected for you), " +
+        "then redeploy. Locally: put DATABASE_URL=... in .env.local",
+    );
+  }
+  return neon(url);
 }
 
-export const sql = neon(url);
+let cached: NeonQueryFunction<false, false> | null = null;
+
+export const sql: NeonQueryFunction<false, false> = ((...args: Parameters<NeonQueryFunction<false, false>>) => {
+  cached ??= client();
+  return cached(...args);
+}) as NeonQueryFunction<false, false>;
 
 /**
  * Creates the tables on first use. Cheap enough to await on every request
