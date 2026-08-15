@@ -11,3 +11,6 @@ next-env.d.ts
 __pycache__/
 data/
 exports/
+
+.vercel
+.env*

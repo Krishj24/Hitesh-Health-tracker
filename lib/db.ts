@@ -6,11 +6,29 @@ import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
  * missing DATABASE_URL would fail the whole build, before Vercel ever gets
  * to a request where the env var is actually available.
  */
+/**
+ * Vercel's Neon "Storage" integration prefixes every variable it injects
+ * with the project name (to avoid collisions between multiple integrations)
+ * instead of using the plain names -- so DATABASE_URL etc. can exist but be
+ * empty while the real value sits under this prefixed key. Falling back to
+ * any *_DATABASE_URL / *_POSTGRES_URL in the environment covers that case
+ * without hardcoding one project's exact prefix.
+ */
+function prefixedFallback(suffix: string): string | undefined {
+  const key = Object.keys(process.env).find(
+    (k) => k !== suffix && k.endsWith(`_${suffix}`),
+  );
+  return key ? process.env[key] : undefined;
+}
+
 function client(): NeonQueryFunction<false, false> {
   const url =
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL ||
-    process.env.POSTGRES_URL_NON_POOLING;
+    process.env.POSTGRES_URL_NON_POOLING ||
+    prefixedFallback("DATABASE_URL") ||
+    prefixedFallback("POSTGRES_URL") ||
+    prefixedFallback("POSTGRES_URL_NON_POOLING");
 
   if (!url) {
     throw new Error(
