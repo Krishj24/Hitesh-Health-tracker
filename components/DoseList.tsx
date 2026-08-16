@@ -105,8 +105,6 @@ export default function DoseList({
     );
   }
 
-  let lastSlot = "";
-
   return (
     <div className={pending ? "opacity-90 transition-opacity" : "transition-opacity"}>
       {!compact && total > 0 && (
@@ -120,38 +118,52 @@ export default function DoseList({
         </div>
       )}
 
-      {total > 0 && (
-        <ul className="space-y-2">
-          {scheduled.map((item) => {
-            const showSlot = !compact && item.slotLabel + item.slotTime !== lastSlot;
-            lastSlot = item.slotLabel + item.slotTime;
-            return (
+      {total > 0 &&
+        (compact ? (
+          <ul className="space-y-2">
+            {scheduled.map((item) => (
               <DoseRow
                 key={item.medId}
                 item={item}
-                showSlot={showSlot}
-                compact={compact}
+                compact
                 openRow={openRow}
                 setOpenRow={setOpenRow}
                 toggle={toggle}
                 setStatus={setStatus}
               />
-            );
-          })}
-        </ul>
-      )}
+            ))}
+          </ul>
+        ) : (
+          <div className="space-y-5">
+            {groupBySlot(scheduled).map((group) => (
+              <section key={group.label + group.time}>
+                <PeriodHeading label={group.label} time={group.time} />
+                <ul className="space-y-2">
+                  {group.items.map((item) => (
+                    <DoseRow
+                      key={item.medId}
+                      item={item}
+                      compact={false}
+                      openRow={openRow}
+                      setOpenRow={setOpenRow}
+                      toggle={toggle}
+                      setStatus={setStatus}
+                    />
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        ))}
 
       {!compact && sos.length > 0 && (
-        <>
-          <p className="mb-1.5 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            As needed (SOS)
-          </p>
+        <div className="mt-5">
+          <PeriodHeading label="As needed (SOS)" icon={SOS_ICON} iconClass={PERIOD_STYLE.sos} />
           <ul className="space-y-2">
             {sos.map((item) => (
               <DoseRow
                 key={item.medId}
                 item={item}
-                showSlot={false}
                 compact={compact}
                 openRow={openRow}
                 setOpenRow={setOpenRow}
@@ -160,15 +172,101 @@ export default function DoseList({
               />
             ))}
           </ul>
-        </>
+        </div>
       )}
+    </div>
+  );
+}
+
+type SlotGroup = { label: string; time: string; items: DoseItem[] };
+
+/** Consecutive items sharing a slot label + time become one period section. */
+function groupBySlot(items: DoseItem[]): SlotGroup[] {
+  const groups: SlotGroup[] = [];
+  for (const item of items) {
+    const last = groups[groups.length - 1];
+    if (last && last.label === item.slotLabel && last.time === item.slotTime) {
+      last.items.push(item);
+    } else {
+      groups.push({ label: item.slotLabel, time: item.slotTime, items: [item] });
+    }
+  }
+  return groups;
+}
+
+const SUN_ICON = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+    <circle cx="12" cy="12" r="4" />
+    <path
+      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+const MOON_ICON = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const CLOCK_ICON = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v5l3 3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+const SOS_ICON = (
+  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
+    <path d="M12 9v4M12 16.5v.01" strokeLinecap="round" />
+    <circle cx="12" cy="12" r="9" />
+  </svg>
+);
+
+const PERIOD_STYLE: Record<string, string> = {
+  morning: "bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
+  afternoon: "bg-orange-100 text-orange-600 dark:bg-orange-950/50 dark:text-orange-400",
+  evening: "bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400",
+  night: "bg-indigo-100 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400",
+  sos: "bg-violet-100 text-violet-600 dark:bg-violet-950/50 dark:text-violet-400",
+  default: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+};
+
+function periodIcon(label: string) {
+  const key = label.trim().toLowerCase();
+  if (key === "night") return MOON_ICON;
+  if (key === "morning" || key === "afternoon" || key === "evening") return SUN_ICON;
+  return CLOCK_ICON;
+}
+
+function PeriodHeading({
+  label,
+  time,
+  icon,
+  iconClass,
+}: {
+  label: string;
+  time?: string;
+  icon?: React.ReactNode;
+  iconClass?: string;
+}) {
+  const key = label.trim().toLowerCase();
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+          iconClass ?? PERIOD_STYLE[key] ?? PERIOD_STYLE.default
+        }`}
+      >
+        {icon ?? periodIcon(label)}
+      </span>
+      <h3 className="text-sm font-bold">{label}</h3>
+      {time && <span className="text-xs text-slate-400 tnum">{timeLabel(time)}</span>}
+      <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" aria-hidden />
     </div>
   );
 }
 
 function DoseRow({
   item,
-  showSlot,
   compact,
   openRow,
   setOpenRow,
@@ -176,7 +274,6 @@ function DoseRow({
   setStatus,
 }: {
   item: DoseItem;
-  showSlot: boolean;
   compact: boolean;
   openRow: number | null;
   setOpenRow: (id: number | null) => void;
@@ -188,11 +285,6 @@ function DoseRow({
 
   return (
     <li>
-      {showSlot && (
-        <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-          {timeLabel(item.slotTime)} · {item.slotLabel}
-        </p>
-      )}
       <div
         className={`card flex items-center gap-3 p-3 ${
           item.status === "missed" ? "border-rose-200 dark:border-rose-900/60" : ""

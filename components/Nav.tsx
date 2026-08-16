@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import ThemeToggle from "@/components/ThemeToggle";
+
 const TABS = [
   { href: "/", label: "Today", icon: "M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10" },
   { href: "/meds", label: "Medicines", icon: "M8.5 15.5 15.5 8.5M6.4 17.6a4.5 4.5 0 0 1 0-6.4l4.8-4.8a4.5 4.5 0 0 1 6.4 6.4l-4.8 4.8a4.5 4.5 0 0 1-6.4 0Z" },
@@ -58,6 +60,9 @@ export default function Nav() {
             </Link>
           );
         })}
+        <div className="flex items-center border-l border-slate-200 pl-2 dark:border-slate-800">
+          <ThemeToggle />
+        </div>
       </div>
     </nav>
   );
