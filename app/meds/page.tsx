@@ -32,8 +32,12 @@ export default async function MedsPage({
       status: doseState(med, dose, day, today, timeNow),
       markedAt: dose?.marked_at ?? null,
       note: dose?.note ?? null,
+      isSos: med.sos,
     };
   });
+
+  const hasDolo = meds.some((m) => m.name.toLowerCase().includes("dolo"));
+  const hasUltracet = meds.some((m) => m.name.toLowerCase().includes("ultracet"));
 
   return (
     <>
@@ -48,6 +52,14 @@ export default async function MedsPage({
       />
 
       <DateNav day={day} today={today} basePath="/meds" />
+
+      {hasDolo && hasUltracet && (
+        <p className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900
+                      dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Dolo already covers pain. Ultracet also contains Paracetamol — don&apos;t take both
+          without the doctor&apos;s advice, to avoid overdose.
+        </p>
+      )}
 
       <DoseList items={items} day={day} />
 

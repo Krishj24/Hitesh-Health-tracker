@@ -90,9 +90,15 @@ function MedRow({ med, onEdit, muted }: { med: Med; onEdit: () => void; muted?: 
           <p className="font-semibold">
             {med.name}
             {med.dose && <span className="ml-1.5 text-sm font-normal text-slate-500">{med.dose}</span>}
+            {med.sos && (
+              <span className="ml-1.5 rounded-full border border-slate-300 px-1.5 py-0.5 text-[10px]
+                               font-semibold uppercase tracking-wide text-slate-500 dark:border-slate-700">
+                SOS
+              </span>
+            )}
           </p>
           <p className="mt-0.5 text-sm text-slate-500">
-            {timeLabel(med.slot_time)} · {med.slot_label}
+            {med.sos ? "As needed" : timeLabel(med.slot_time)} · {med.slot_label}
             {med.notes && ` · ${med.notes}`}
           </p>
           <p className="mt-0.5 text-xs text-slate-400">

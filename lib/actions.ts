@@ -101,7 +101,7 @@ export async function markAll(day: string) {
   await sql`
     INSERT INTO doses (med_id, dose_date, status, marked_at)
     SELECT id, ${day}, 'taken', ${nowStamp()} FROM meds
-    WHERE active = true AND start_date <= ${day}
+    WHERE active = true AND sos = false AND start_date <= ${day}
       AND (end_date IS NULL OR end_date >= ${day})
     ON CONFLICT (med_id, dose_date) DO UPDATE
       SET status = 'taken', marked_at = EXCLUDED.marked_at`;
@@ -136,20 +136,21 @@ export async function saveMed(_prev: Result | null, form: FormData): Promise<Res
   let endDate = clean(form.get("end_date"));
   if (courseDays && courseDays > 0) endDate = addDays(startDate, courseDays - 1);
   const notes = clean(form.get("notes"));
+  const sos = form.get("sos") === "on";
 
   if (id) {
     await sql`
       UPDATE meds SET name = ${name}, dose = ${dose}, slot_label = ${slotLabel},
         slot_time = ${slotTime}, start_date = ${startDate}, end_date = ${endDate},
-        notes = ${notes}
+        notes = ${notes}, sos = ${sos}
       WHERE id = ${id}`;
     refresh();
     return { ok: true, message: `${name} updated.` };
   }
 
   await sql`
-    INSERT INTO meds (name, dose, slot_label, slot_time, start_date, end_date, notes)
-    VALUES (${name}, ${dose}, ${slotLabel}, ${slotTime}, ${startDate}, ${endDate}, ${notes})`;
+    INSERT INTO meds (name, dose, slot_label, slot_time, start_date, end_date, notes, sos)
+    VALUES (${name}, ${dose}, ${slotLabel}, ${slotTime}, ${startDate}, ${endDate}, ${notes}, ${sos})`;
   refresh();
   return {
     ok: true,

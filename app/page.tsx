@@ -40,11 +40,13 @@ export default async function Dashboard() {
       status: doseState(med, dose, today, today, timeNow),
       markedAt: dose?.marked_at ?? null,
       note: dose?.note ?? null,
+      isSos: med.sos,
     };
   });
 
-  const outstanding = items.filter((i) => i.status === "due" || i.status === "pending");
-  const takenCount = items.filter((i) => i.status === "taken").length;
+  const scheduledItems = items.filter((i) => !i.isSos);
+  const outstanding = scheduledItems.filter((i) => i.status === "due" || i.status === "pending");
+  const takenCount = scheduledItems.filter((i) => i.status === "taken").length;
   const postOpDay =
     isValidDay(profile.surgeryDate) && daysBetween(profile.surgeryDate, today) >= 0
       ? daysBetween(profile.surgeryDate, today)
@@ -94,18 +96,20 @@ export default async function Dashboard() {
           </Link>
         </div>
 
-        {items.length > 0 && (
+        {scheduledItems.length > 0 && (
           <p className="mb-3 text-sm text-slate-500">
             <span className="font-semibold text-slate-700 tnum dark:text-slate-300">
-              {takenCount} of {items.length}
+              {takenCount} of {scheduledItems.length}
             </span>{" "}
             marked taken
-            {outstanding.length === 0 && takenCount === items.length && " — all done for today"}
+            {outstanding.length === 0 &&
+              takenCount === scheduledItems.length &&
+              " — all done for today"}
           </p>
         )}
 
         <DoseList
-          items={outstanding.length ? outstanding : items}
+          items={outstanding.length ? outstanding : scheduledItems}
           day={today}
           compact
         />

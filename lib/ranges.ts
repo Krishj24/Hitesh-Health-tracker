@@ -47,6 +47,35 @@ export const KIND_LABEL = {
 
 export const KIND_SHORT = { bp: "BP", sugar: "Sugar", spo2: "SpO₂" } as const;
 
+/**
+ * Fixed per-type colour so BP / Sugar / Oxygen stay visually distinct at a
+ * glance -- separate from LEVEL_STYLE, which flags whether a value is in
+ * range. Red = BP, Green = Sugar, Blue = Oxygen.
+ */
+export const KIND_COLOR = {
+  bp: {
+    text: "text-red-600 dark:text-red-400",
+    bg: "bg-red-50 dark:bg-red-950/40",
+    border: "border-red-200 dark:border-red-900",
+    dot: "bg-red-500",
+    bar: "bg-red-500",
+  },
+  sugar: {
+    text: "text-green-600 dark:text-green-400",
+    bg: "bg-green-50 dark:bg-green-950/40",
+    border: "border-green-200 dark:border-green-900",
+    dot: "bg-green-500",
+    bar: "bg-green-500",
+  },
+  spo2: {
+    text: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-50 dark:bg-blue-950/40",
+    border: "border-blue-200 dark:border-blue-900",
+    dot: "bg-blue-500",
+    bar: "bg-blue-500",
+  },
+} as const;
+
 export const SUGAR_TAGS = [
   { value: "fasting", label: "Fasting" },
   { value: "post-meal", label: "Post-meal" },

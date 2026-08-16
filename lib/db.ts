@@ -83,8 +83,10 @@ async function migrate() {
       end_date   TEXT,
       notes      TEXT,
       active     BOOLEAN NOT NULL DEFAULT true,
+      sos        BOOLEAN NOT NULL DEFAULT false,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`;
+  await sql`ALTER TABLE meds ADD COLUMN IF NOT EXISTS sos BOOLEAN NOT NULL DEFAULT false`;
   await sql`
     CREATE TABLE IF NOT EXISTS doses (
       id        SERIAL PRIMARY KEY,
@@ -126,6 +128,7 @@ export type Med = {
   end_date: string | null;
   notes: string | null;
   active: boolean;
+  sos: boolean;
 };
 
 export type Dose = {

@@ -21,6 +21,7 @@ export default function MedForm({ med, onDone }: { med?: Med; onDone?: () => voi
   const [slotLabel, setSlotLabel] = useState(med?.slot_label ?? "Morning");
   const [slotTime, setSlotTime] = useState(med?.slot_time ?? "08:00");
   const [ongoing, setOngoing] = useState(!med?.end_date);
+  const [sos, setSos] = useState(med?.sos ?? false);
 
   const startDate = med?.start_date ?? todayStr();
   const courseDays =
@@ -64,6 +65,23 @@ export default function MedForm({ med, onDone }: { med?: Med; onDone?: () => voi
           placeholder="1 tablet, or 500 mg"
         />
       </div>
+
+      <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
+        <input
+          type="checkbox"
+          name="sos"
+          checked={sos}
+          onChange={(e) => setSos(e.target.checked)}
+          className="mt-0.5 h-5 w-5 rounded border-slate-300 accent-teal-600"
+        />
+        <span>
+          <span className="font-medium">As needed (SOS)</span>
+          <span className="block text-xs text-slate-500">
+            Only taken when required — never shown as missed, and doesn&apos;t count toward the
+            daily checklist. Tap it on the day it&apos;s actually used.
+          </span>
+        </span>
+      </label>
 
       <div>
         <span className="label">When is it taken?</span>

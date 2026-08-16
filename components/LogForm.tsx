@@ -9,6 +9,7 @@ import {
   flagBp,
   flagSpo2,
   flagSugar,
+  KIND_COLOR,
   LEVEL_STYLE,
   SUGAR_TAGS,
   type Level,
@@ -83,7 +84,7 @@ export default function LogForm({
         />
       </div>
 
-      <Section title="Blood pressure" hint={bpHint}>
+      <Section title="Blood pressure" hint={bpHint} kind="bp">
         <div className="grid grid-cols-3 gap-3">
           <Num
             label="Upper"
@@ -107,7 +108,7 @@ export default function LogForm({
         </div>
       </Section>
 
-      <Section title="Blood sugar" hint={sugarHint}>
+      <Section title="Blood sugar" hint={sugarHint} kind="sugar">
         <div className="grid grid-cols-3 gap-3">
           <Num
             label="mg/dL"
@@ -141,7 +142,7 @@ export default function LogForm({
         </div>
       </Section>
 
-      <Section title="Oxygen (SpO₂)" hint={spo2Hint}>
+      <Section title="Oxygen (SpO₂)" hint={spo2Hint} kind="spo2">
         <div className="grid grid-cols-3 gap-3">
           <Num
             label="SpO₂ %"
@@ -183,16 +184,19 @@ export default function LogForm({
 function Section({
   title,
   hint,
+  kind,
   children,
 }: {
   title: string;
   hint: [Level, string] | null;
+  kind: "bp" | "sugar" | "spo2";
   children: React.ReactNode;
 }) {
+  const c = KIND_COLOR[kind];
   return (
-    <section className="card p-4">
+    <section className={`card border-l-4 p-4 ${c.border}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h2 className="font-bold">{title}</h2>
+        <h2 className={`font-bold ${c.text}`}>{title}</h2>
         {hint && (
           <span
             className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${LEVEL_STYLE[hint[0]]}`}

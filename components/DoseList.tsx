@@ -16,6 +16,7 @@ export type DoseItem = {
   status: DoseStatus;
   markedAt: string | null;
   note: string | null;
+  isSos: boolean;
 };
 
 const STATUS_TEXT: Record<DoseStatus, string> = {
@@ -25,6 +26,7 @@ const STATUS_TEXT: Record<DoseStatus, string> = {
   pending: "Later today",
   missed: "Not marked",
   upcoming: "Upcoming",
+  sos: "As needed",
 };
 
 const STATUS_STYLE: Record<DoseStatus, string> = {
@@ -34,6 +36,7 @@ const STATUS_STYLE: Record<DoseStatus, string> = {
   pending: "text-slate-500",
   missed: "text-rose-600 dark:text-rose-400",
   upcoming: "text-slate-400",
+  sos: "text-slate-500",
 };
 
 export default function DoseList({
@@ -57,12 +60,21 @@ export default function DoseList({
   );
   const [openRow, setOpenRow] = useState<number | null>(null);
 
-  const done = optimistic.filter((i) => i.status === "taken").length;
-  const total = optimistic.length;
+  const scheduled = optimistic.filter((i) => !i.isSos);
+  const sos = optimistic.filter((i) => i.isSos);
+
+  const done = scheduled.filter((i) => i.status === "taken").length;
+  const total = scheduled.length;
 
   function toggle(item: DoseItem) {
     const next: DoseStatus =
-      item.status === "taken" ? (day < todayGuess() ? "missed" : "pending") : "taken";
+      item.status === "taken"
+        ? item.isSos
+          ? "sos"
+          : day < todayGuess()
+            ? "missed"
+            : "pending"
+        : "taken";
     startTransition(async () => {
       setOptimistic({ medId: item.medId, status: next });
       await markDose(item.medId, day, item.status === "taken" ? null : "taken");
@@ -71,7 +83,7 @@ export default function DoseList({
 
   function setStatus(item: DoseItem, status: "skipped" | null) {
     startTransition(async () => {
-      setOptimistic({ medId: item.medId, status: status ?? "pending" });
+      setOptimistic({ medId: item.medId, status: status ?? (item.isSos ? "sos" : "pending") });
       await markDose(item.medId, day, status);
     });
     setOpenRow(null);
@@ -84,7 +96,7 @@ export default function DoseList({
     });
   }
 
-  if (!total) {
+  if (!total && !sos.length) {
     return (
       <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-sm
                     text-slate-500 dark:border-slate-700">
@@ -97,7 +109,7 @@ export default function DoseList({
 
   return (
     <div className={pending ? "opacity-90 transition-opacity" : "transition-opacity"}>
-      {!compact && (
+      {!compact && total > 0 && (
         <div className="mb-3 flex items-center justify-between gap-3">
           <Progress done={done} total={total} />
           {done < total && (
@@ -108,97 +120,154 @@ export default function DoseList({
         </div>
       )}
 
-      <ul className="space-y-2">
-        {optimistic.map((item) => {
-          const showSlot = !compact && item.slotLabel + item.slotTime !== lastSlot;
-          lastSlot = item.slotLabel + item.slotTime;
-          const taken = item.status === "taken";
-          const skipped = item.status === "skipped";
+      {total > 0 && (
+        <ul className="space-y-2">
+          {scheduled.map((item) => {
+            const showSlot = !compact && item.slotLabel + item.slotTime !== lastSlot;
+            lastSlot = item.slotLabel + item.slotTime;
+            return (
+              <DoseRow
+                key={item.medId}
+                item={item}
+                showSlot={showSlot}
+                compact={compact}
+                openRow={openRow}
+                setOpenRow={setOpenRow}
+                toggle={toggle}
+                setStatus={setStatus}
+              />
+            );
+          })}
+        </ul>
+      )}
 
-          return (
-            <li key={item.medId}>
-              {showSlot && (
-                <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                  {timeLabel(item.slotTime)} · {item.slotLabel}
-                </p>
-              )}
-              <div
-                className={`card flex items-center gap-3 p-3 ${
-                  item.status === "missed" ? "border-rose-200 dark:border-rose-900/60" : ""
-                }`}
-              >
-                <button
-                  onClick={() => toggle(item)}
-                  aria-pressed={taken}
-                  aria-label={`${taken ? "Unmark" : "Mark"} ${item.name} as taken`}
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2
-                              transition active:scale-95 ${
-                                taken
-                                  ? "border-emerald-500 bg-emerald-500 text-white"
-                                  : skipped
-                                    ? "border-slate-300 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800"
-                                    : "border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800"
-                              }`}
-                >
-                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3}>
-                    <path
-                      d={skipped ? "M6 12h12" : "M5 13l4 4L19 7"}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-
-                <button onClick={() => toggle(item)} className="min-w-0 flex-1 text-left">
-                  <p
-                    className={`truncate font-semibold ${
-                      taken || skipped ? "text-slate-400 line-through dark:text-slate-500" : ""
-                    }`}
-                  >
-                    {item.name}
-                    {item.dose && (
-                      <span className="ml-1.5 text-sm font-normal text-slate-500">{item.dose}</span>
-                    )}
-                  </p>
-                  <p className="truncate text-xs">
-                    <span className={STATUS_STYLE[item.status]}>{STATUS_TEXT[item.status]}</span>
-                    {taken && item.markedAt && (
-                      <span className="text-slate-400"> at {clock(item.markedAt)}</span>
-                    )}
-                    {compact && <span className="text-slate-400"> · {timeLabel(item.slotTime)}</span>}
-                    {item.notes && <span className="text-slate-400"> · {item.notes}</span>}
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setOpenRow(openRow === item.medId ? null : item.medId)}
-                  aria-label={`More options for ${item.name}`}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400
-                             hover:bg-slate-100 dark:hover:bg-slate-800"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-                    <circle cx="12" cy="5" r="1.6" />
-                    <circle cx="12" cy="12" r="1.6" />
-                    <circle cx="12" cy="19" r="1.6" />
-                  </svg>
-                </button>
-              </div>
-
-              {openRow === item.medId && (
-                <div className="mt-1.5 flex gap-2 px-2">
-                  <button onClick={() => setStatus(item, "skipped")} className="btn-ghost px-3 py-2 text-sm">
-                    Mark skipped
-                  </button>
-                  <button onClick={() => setStatus(item, null)} className="btn-ghost px-3 py-2 text-sm">
-                    Clear mark
-                  </button>
-                </div>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      {!compact && sos.length > 0 && (
+        <>
+          <p className="mb-1.5 mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400">
+            As needed (SOS)
+          </p>
+          <ul className="space-y-2">
+            {sos.map((item) => (
+              <DoseRow
+                key={item.medId}
+                item={item}
+                showSlot={false}
+                compact={compact}
+                openRow={openRow}
+                setOpenRow={setOpenRow}
+                toggle={toggle}
+                setStatus={setStatus}
+              />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
+  );
+}
+
+function DoseRow({
+  item,
+  showSlot,
+  compact,
+  openRow,
+  setOpenRow,
+  toggle,
+  setStatus,
+}: {
+  item: DoseItem;
+  showSlot: boolean;
+  compact: boolean;
+  openRow: number | null;
+  setOpenRow: (id: number | null) => void;
+  toggle: (item: DoseItem) => void;
+  setStatus: (item: DoseItem, status: "skipped" | null) => void;
+}) {
+  const taken = item.status === "taken";
+  const skipped = item.status === "skipped";
+
+  return (
+    <li>
+      {showSlot && (
+        <p className="mb-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {timeLabel(item.slotTime)} · {item.slotLabel}
+        </p>
+      )}
+      <div
+        className={`card flex items-center gap-3 p-3 ${
+          item.status === "missed" ? "border-rose-200 dark:border-rose-900/60" : ""
+        }`}
+      >
+        <button
+          onClick={() => toggle(item)}
+          aria-pressed={taken}
+          aria-label={`${taken ? "Unmark" : "Mark"} ${item.name} as taken`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2
+                      transition active:scale-95 ${
+                        taken
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : skipped
+                            ? "border-slate-300 bg-slate-100 text-slate-400 dark:border-slate-700 dark:bg-slate-800"
+                            : "border-slate-300 bg-white text-transparent dark:border-slate-600 dark:bg-slate-800"
+                      }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3}>
+            <path
+              d={skipped ? "M6 12h12" : "M5 13l4 4L19 7"}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        <button onClick={() => toggle(item)} className="min-w-0 flex-1 text-left">
+          <p
+            className={`truncate font-semibold ${
+              taken || skipped ? "text-slate-400 line-through dark:text-slate-500" : ""
+            }`}
+          >
+            {item.name}
+            {item.dose && (
+              <span className="ml-1.5 text-sm font-normal text-slate-500">{item.dose}</span>
+            )}
+          </p>
+          <p className="truncate text-xs">
+            <span className={STATUS_STYLE[item.status]}>{STATUS_TEXT[item.status]}</span>
+            {taken && item.markedAt && (
+              <span className="text-slate-400"> at {clock(item.markedAt)}</span>
+            )}
+            {compact && !item.isSos && (
+              <span className="text-slate-400"> · {timeLabel(item.slotTime)}</span>
+            )}
+            {item.notes && <span className="text-slate-400"> · {item.notes}</span>}
+          </p>
+        </button>
+
+        <button
+          onClick={() => setOpenRow(openRow === item.medId ? null : item.medId)}
+          aria-label={`More options for ${item.name}`}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400
+                     hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+            <circle cx="12" cy="5" r="1.6" />
+            <circle cx="12" cy="12" r="1.6" />
+            <circle cx="12" cy="19" r="1.6" />
+          </svg>
+        </button>
+      </div>
+
+      {openRow === item.medId && (
+        <div className="mt-1.5 flex gap-2 px-2">
+          <button onClick={() => setStatus(item, "skipped")} className="btn-ghost px-3 py-2 text-sm">
+            Mark skipped
+          </button>
+          <button onClick={() => setStatus(item, null)} className="btn-ghost px-3 py-2 text-sm">
+            Clear mark
+          </button>
+        </div>
+      )}
+    </li>
   );
 }
 

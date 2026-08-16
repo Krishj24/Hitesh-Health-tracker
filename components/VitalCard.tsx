@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { since } from "@/lib/date";
 import type { Reading } from "@/lib/db";
-import { describe, KIND_LABEL, LEVEL_DOT, type Targets } from "@/lib/ranges";
+import { describe, KIND_COLOR, KIND_LABEL, LEVEL_DOT, type Targets } from "@/lib/ranges";
 
 export default function VitalCard({
   kind,
@@ -13,10 +13,15 @@ export default function VitalCard({
   reading: Reading | undefined;
   targets: Targets;
 }) {
+  const c = KIND_COLOR[kind];
+
   if (!reading) {
     return (
-      <Link href="/log" className="card flex flex-col justify-between p-4">
-        <p className="text-sm font-medium text-slate-500">{KIND_LABEL[kind]}</p>
+      <Link
+        href="/log"
+        className={`card flex flex-col justify-between border-l-4 p-4 ${c.border}`}
+      >
+        <p className={`text-sm font-medium ${c.text}`}>{KIND_LABEL[kind]}</p>
         <p className="mt-2 text-sm text-slate-400">Not recorded yet — tap to add</p>
       </Link>
     );
@@ -25,9 +30,12 @@ export default function VitalCard({
   const d = describe(reading, targets);
 
   return (
-    <Link href={`/history?kind=${kind}`} className="card flex flex-col justify-between p-4">
+    <Link
+      href={`/history?kind=${kind}`}
+      className={`card flex flex-col justify-between border-l-4 p-4 ${c.border}`}
+    >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-500">{KIND_LABEL[kind]}</p>
+        <p className={`text-sm font-medium ${c.text}`}>{KIND_LABEL[kind]}</p>
         <span className={`h-2.5 w-2.5 rounded-full ${LEVEL_DOT[d.level]}`} aria-hidden />
       </div>
       <p className="mt-1.5 text-3xl font-bold tracking-tight tnum">{d.value}</p>

@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { deleteReading } from "@/lib/actions";
 import { clock, longDay, prettyDay } from "@/lib/date";
 import type { Reading } from "@/lib/db";
-import { describe, KIND_SHORT, LEVEL_DOT, type Targets } from "@/lib/ranges";
+import { describe, KIND_COLOR, KIND_SHORT, LEVEL_DOT, type Targets } from "@/lib/ranges";
 
 export default function ReadingList({
   readings,
@@ -54,14 +54,17 @@ function ReadingRow({ reading, targets }: { reading: Reading; targets: Targets }
   const [confirming, setConfirming] = useState(false);
   const [pending, startTransition] = useTransition();
   const d = describe(reading, targets);
+  const c = KIND_COLOR[reading.kind];
 
   return (
     <li className="card p-3">
       <div className="flex items-center gap-3">
-        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${LEVEL_DOT[d.level]}`} aria-hidden />
-        <div className="w-14 shrink-0 text-xs font-semibold text-slate-500">
+        <span
+          className={`w-14 shrink-0 rounded-full border px-2 py-0.5 text-center text-xs font-semibold ${c.text} ${c.bg} ${c.border}`}
+        >
           {KIND_SHORT[reading.kind]}
-        </div>
+        </span>
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${LEVEL_DOT[d.level]}`} aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="font-semibold tnum">
             {d.value} <span className="text-xs font-normal text-slate-500">{d.unit}</span>

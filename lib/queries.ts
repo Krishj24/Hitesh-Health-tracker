@@ -86,7 +86,7 @@ export async function dosesBetween(from: string, to: string): Promise<Dose[]> {
     SELECT * FROM doses WHERE dose_date >= ${from} AND dose_date <= ${to}`) as Dose[];
 }
 
-export type DoseStatus = "taken" | "skipped" | "due" | "pending" | "missed" | "upcoming";
+export type DoseStatus = "taken" | "skipped" | "due" | "pending" | "missed" | "upcoming" | "sos";
 
 export function doseState(
   med: Med,
@@ -96,6 +96,7 @@ export function doseState(
   timeNow: string,
 ): DoseStatus {
   if (dose) return dose.status;
+  if (med.sos) return "sos";
   if (day < today) return "missed";
   if (day > today) return "upcoming";
   return timeNow >= med.slot_time ? "due" : "pending";
@@ -113,7 +114,7 @@ export async function unmarkedRecently(days: number, today: string) {
   let count = 0;
   for (const day of lastNDays(days, lastDay)) {
     for (const m of meds) {
-      const due = m.active && m.start_date <= day && (!m.end_date || m.end_date >= day);
+      const due = m.active && !m.sos && m.start_date <= day && (!m.end_date || m.end_date >= day);
       if (due && !marked.has(`${m.id}|${day}`)) count += 1;
     }
   }
@@ -139,7 +140,7 @@ export async function adherence(days: number, today = todayStr()): Promise<Adher
 
   for (const day of lastNDays(days, today)) {
     const due = meds.filter(
-      (m) => m.active && m.start_date <= day && (!m.end_date || m.end_date >= day),
+      (m) => m.active && !m.sos && m.start_date <= day && (!m.end_date || m.end_date >= day),
     );
     let taken = 0;
     for (const m of due) {

@@ -5,7 +5,7 @@ import ReadingList from "@/components/ReadingList";
 import { addDays, shortDay, todayStr } from "@/lib/date";
 import type { Kind, Reading } from "@/lib/db";
 import { adherence, getTargets, readingsSince } from "@/lib/queries";
-import { describe, KIND_LABEL, type Targets } from "@/lib/ranges";
+import { describe, KIND_COLOR, KIND_LABEL, type Targets } from "@/lib/ranges";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +68,11 @@ export default async function HistoryPage({
                 key={k}
                 href={`/history?tab=readings&range=${range}&kind=${k}`}
                 active={kind === k}
+                activeClass={k === "all" ? undefined : `${KIND_COLOR[k].dot} text-white`}
               >
+                {k !== "all" && (
+                  <span className={`h-2 w-2 rounded-full ${KIND_COLOR[k].dot}`} aria-hidden />
+                )}
                 {k === "all" ? "Everything" : KIND_LABEL[k]}
               </Chip>
             ))}
@@ -114,18 +118,20 @@ function Tab({
 function Chip({
   href,
   active,
+  activeClass,
   children,
 }: {
   href: string;
   active: boolean;
+  activeClass?: string;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition ${
         active
-          ? "bg-teal-600 text-white"
+          ? (activeClass ?? "bg-teal-600 text-white")
           : "border border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
       }`}
     >
@@ -139,12 +145,13 @@ function Averages({ readings, targets }: { readings: Reading[]; targets: Targets
   const spo2 = readings.filter((r) => r.kind === "spo2");
   const flagged = readings.filter((r) => describe(r, targets).level !== "ok").length;
 
-  const stats: { label: string; value: string; sub: string }[] = [];
+  const stats: { label: string; value: string; sub: string; kind: Kind }[] = [];
   if (bp.length) {
     stats.push({
       label: "Average BP",
       value: `${avg(bp.map((r) => r.v1))}/${avg(bp.map((r) => r.v2))}`,
       sub: `${bp.length} reading${bp.length === 1 ? "" : "s"}`,
+      kind: "bp",
     });
   }
   for (const tag of ["fasting", "post-meal", "random"]) {
@@ -154,6 +161,7 @@ function Averages({ readings, targets }: { readings: Reading[]; targets: Targets
         label: `Sugar · ${tag}`,
         value: `${avg(rows.map((r) => r.v1))}`,
         sub: `mg/dL · ${rows.length} reading${rows.length === 1 ? "" : "s"}`,
+        kind: "sugar",
       });
     }
   }
@@ -162,6 +170,7 @@ function Averages({ readings, targets }: { readings: Reading[]; targets: Targets
       label: "Average SpO₂",
       value: `${avg(spo2.map((r) => r.v1))}%`,
       sub: `lowest ${Math.min(...spo2.map((r) => r.v1 ?? 100))}%`,
+      kind: "spo2",
     });
   }
   if (!stats.length) return null;
@@ -170,8 +179,8 @@ function Averages({ readings, targets }: { readings: Reading[]; targets: Targets
     <section className="mb-5">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {stats.map((s) => (
-          <div key={s.label} className="card p-3">
-            <p className="text-xs font-medium text-slate-500">{s.label}</p>
+          <div key={s.label} className={`card border-l-4 p-3 ${KIND_COLOR[s.kind].border}`}>
+            <p className={`text-xs font-medium ${KIND_COLOR[s.kind].text}`}>{s.label}</p>
             <p className="mt-1 text-2xl font-bold tnum">{s.value}</p>
             <p className="text-xs text-slate-400">{s.sub}</p>
           </div>
