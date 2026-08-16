@@ -15,51 +15,60 @@ body {
   padding-bottom: calc(5.25rem + env(safe-area-inset-bottom));
 }
 
-/* Numbers should never reflow as they tick over. */
-.tnum {
-  font-variant-numeric: tabular-nums;
-}
+/*
+ * Component classes live in Tailwind's `components` layer so a plain
+ * utility class on the element (e.g. border-l-red-400) always wins over
+ * these, per the standard theme < base < components < utilities cascade --
+ * unlayered CSS here would instead beat every utility regardless of source
+ * order, since unlayered rules always win over layered ones.
+ */
+@layer components {
+  /* Numbers should never reflow as they tick over. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
 
-/* Inputs are finger-sized: 16px min stops iOS zooming on focus. */
-.field {
-  @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base
-         text-slate-900 outline-none transition
-         placeholder:text-slate-400
-         focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30
-         dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100
-         dark:placeholder:text-slate-600;
-}
+  /* Inputs are finger-sized: 16px min stops iOS zooming on focus. */
+  .field {
+    @apply w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base
+           text-slate-900 outline-none transition
+           placeholder:text-slate-400
+           focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30
+           dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100
+           dark:placeholder:text-slate-600;
+  }
 
-.label {
-  @apply mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-400;
-}
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-600 dark:text-slate-400;
+  }
 
-.card {
-  @apply rounded-2xl border border-slate-200 bg-white shadow-sm
-         dark:border-slate-800 dark:bg-slate-900;
-}
+  .card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm
+           dark:border-slate-800 dark:bg-slate-900;
+  }
 
-/* Tailwind v4 can only @apply real utilities, so each button repeats the base. */
-.btn,
-.btn-primary,
-.btn-ghost,
-.btn-danger {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3
-         text-base font-semibold transition active:scale-[0.98]
-         disabled:pointer-events-none disabled:opacity-50;
-}
+  /* Tailwind v4 can only @apply real utilities, so each button repeats the base. */
+  .btn,
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3
+           text-base font-semibold transition active:scale-[0.98]
+           disabled:pointer-events-none disabled:opacity-50;
+  }
 
-.btn-primary {
-  @apply bg-teal-600 text-white hover:bg-teal-700;
-}
+  .btn-primary {
+    @apply bg-teal-600 text-white hover:bg-teal-700;
+  }
 
-.btn-ghost {
-  @apply border border-slate-300 bg-white text-slate-700
-         hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200
-         dark:hover:bg-slate-800;
-}
+  .btn-ghost {
+    @apply border border-slate-300 bg-white text-slate-700
+           hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200
+           dark:hover:bg-slate-800;
+  }
 
-.btn-danger {
-  @apply border border-rose-300 bg-white text-rose-700 hover:bg-rose-50
-         dark:border-rose-900 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/40;
+  .btn-danger {
+    @apply border border-rose-300 bg-white text-rose-700 hover:bg-rose-50
+           dark:border-rose-900 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/40;
+  }
 }
