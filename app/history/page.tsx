@@ -179,7 +179,7 @@ function Averages({ readings, targets }: { readings: Reading[]; targets: Targets
     <section className="mb-5">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {stats.map((s) => (
-          <div key={s.label} className={`card border-l-4 p-3 ${KIND_COLOR[s.kind].border}`}>
+          <div key={s.label} className={`card border-l-4 p-3 ${KIND_COLOR[s.kind].borderL}`}>
             <p className={`text-xs font-medium ${KIND_COLOR[s.kind].text}`}>{s.label}</p>
             <p className="mt-1 text-2xl font-bold tnum">{s.value}</p>
             <p className="text-xs text-slate-400">{s.sub}</p>

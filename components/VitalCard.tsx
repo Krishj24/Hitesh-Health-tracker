@@ -19,7 +19,7 @@ export default function VitalCard({
     return (
       <Link
         href="/log"
-        className={`card flex flex-col justify-between border-l-4 p-4 ${c.border}`}
+        className={`card flex flex-col justify-between border-l-4 p-4 ${c.borderL}`}
       >
         <p className={`text-sm font-medium ${c.text}`}>{KIND_LABEL[kind]}</p>
         <p className="mt-2 text-sm text-slate-400">Not recorded yet — tap to add</p>
@@ -32,7 +32,7 @@ export default function VitalCard({
   return (
     <Link
       href={`/history?kind=${kind}`}
-      className={`card flex flex-col justify-between border-l-4 p-4 ${c.border}`}
+      className={`card flex flex-col justify-between border-l-4 p-4 ${c.borderL}`}
     >
       <div className="flex items-center justify-between">
         <p className={`text-sm font-medium ${c.text}`}>{KIND_LABEL[kind]}</p>

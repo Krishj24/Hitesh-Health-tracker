@@ -57,6 +57,10 @@ export const KIND_COLOR = {
     text: "text-red-600 dark:text-red-400",
     bg: "bg-red-50 dark:bg-red-950/40",
     border: "border-red-200 dark:border-red-900",
+    // .card already sets a border colour on every side; a plain border-{color}
+    // utility loses that specificity fight, so accent bars need the per-side
+    // border-l-{color} utility instead.
+    borderL: "border-l-red-400 dark:border-l-red-700",
     dot: "bg-red-500",
     bar: "bg-red-500",
   },
@@ -64,6 +68,7 @@ export const KIND_COLOR = {
     text: "text-green-600 dark:text-green-400",
     bg: "bg-green-50 dark:bg-green-950/40",
     border: "border-green-200 dark:border-green-900",
+    borderL: "border-l-green-400 dark:border-l-green-700",
     dot: "bg-green-500",
     bar: "bg-green-500",
   },
@@ -71,6 +76,7 @@ export const KIND_COLOR = {
     text: "text-blue-600 dark:text-blue-400",
     bg: "bg-blue-50 dark:bg-blue-950/40",
     border: "border-blue-200 dark:border-blue-900",
+    borderL: "border-l-blue-400 dark:border-l-blue-700",
     dot: "bg-blue-500",
     bar: "bg-blue-500",
   },

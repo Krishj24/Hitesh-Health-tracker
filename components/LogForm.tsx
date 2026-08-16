@@ -194,7 +194,7 @@ function Section({
 }) {
   const c = KIND_COLOR[kind];
   return (
-    <section className={`card border-l-4 p-4 ${c.border}`}>
+    <section className={`card border-l-4 p-4 ${c.borderL}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className={`font-bold ${c.text}`}>{title}</h2>
         {hint && (
